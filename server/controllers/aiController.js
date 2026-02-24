@@ -332,7 +332,7 @@ export const reviewResume = async (req, res) => {
      // Truncate text to prevent huge AI prompts
     const resumeText = pdfData.text.slice(0, 8000); // adjust depending on model tokens
 
-    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume Content:\n\n${pdfData.text}`;
+    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume Content:\n\n${resumeText}`;
 
     // ai content generation
     let aiResponse;
