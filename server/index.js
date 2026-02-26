@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import { clerkMiddleware, requireAuth } from '@clerk/express';
 import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary from './config/cloudinary.js';
+import userRouter from './routes/userRoute.js';
 
 
 const app = express();
@@ -23,6 +24,7 @@ app.get('/', (req, res)=> {
 app.use(requireAuth());
 
 app.use('/api/v1/ai', aiRouter);
+app.use('/api/v1/user', userRouter);
 
 app.listen(5000, ()=> {
     console.log("Server on running on port 5000")

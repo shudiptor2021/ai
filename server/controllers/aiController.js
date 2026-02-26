@@ -15,7 +15,7 @@ const AI = new OpenAI({
 export const generateArticle = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { prompt, length, likes } = req.body;
+    const { prompt, length } = req.body;
     const plan = req.plan;
     const free_usage = req.free_usage;
 
@@ -48,7 +48,6 @@ export const generateArticle = async (req, res) => {
       prompt,
       content,
       type: "article",
-      likes,
     };
 
     // database
@@ -61,7 +60,7 @@ export const generateArticle = async (req, res) => {
         },
       });
     }
-    res.json({ success: true, data: content });
+    res.json({ success: true, content });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
@@ -94,7 +93,7 @@ export const generateBlogTitle = async (req, res) => {
         },
       ],
       temperature: 0.7,
-      max_completion_tokens: 100,
+      max_tokens: 1000,
     });
 
     // console.log(response.choices[0].message);
@@ -117,7 +116,7 @@ export const generateBlogTitle = async (req, res) => {
         },
       });
     }
-    res.json({ success: true, data: content });
+    res.json({ success: true, content });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
@@ -165,7 +164,7 @@ export const generateImage = async (req, res) => {
     // database
     await Content.create(mainData);
 
-    res.json({ success: true, data: mainData });
+    res.json({ success: true, content: secure_url });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });

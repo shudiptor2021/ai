@@ -1,4 +1,4 @@
-import Content from "../models/aiContent.model";
+import Content from "../models/aiContent.model.js";
 
 export const getUserCreations = async (req, res) => {
   try {
