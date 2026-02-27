@@ -38,24 +38,22 @@ export const toggleLikeCreation = async (req, res) => {
         .json({ success: false, message: "Creation not found!" });
     }
 
-    const currentLikes = creation.likes;
     const userIdString = userId.toString();
-    let updatedLikes;
-    let message;
+    const isLiked = creation.likes.includes(userIdString);
 
-    if (currentLikes.includes(userIdString)) {
-      updatedLikes = currentLikes.filter((user) => user !== userIdString);
-      message = "Creation Unliked";
-    } else {
-      updatedLikes = [...currentLikes, userIdString];
-      message = "Creation Liked";
-    }
+    const updatedCreation = await Content.findByIdAndUpdate(
+      id,
+      isLiked
+        ? { $pull: { likes: userIdString } }
+        : { $addToSet: { likes: userIdString } },
+      { returnDocument: "after" } 
+    );
 
-    await Content.findByIdAndUpdate(id, { likes: updatedLikes });
-
-    res
-      .status(200)
-      .json({ success: true, message, likesCount: updatedLikes.length });
+    res.status(200).json({
+      success: true,
+      message: isLiked ? "Creation Unliked" : "Creation Liked",
+      likesCount: updatedCreation.likes.length,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
