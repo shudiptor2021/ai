@@ -2,7 +2,7 @@ import { useState } from "react";
 import Markdown from "react-markdown";
 
 interface CreationItem {
-  id: number;
+  _id: number;
   user_id: string;
   prompt: string;
   content: string;
@@ -42,7 +42,7 @@ const CreationItems = ({ item }: { item: CreationItem }) => {
               />
             </div>
           ) : (
-            <div className="mt-3 h-full overflow-y-scroll text-sm text-slate-700">
+            <div className="mt-3 h-full  text-sm text-slate-700">
               <div className="reset-tw">
                 <Markdown>{item.content}</Markdown>
               </div>

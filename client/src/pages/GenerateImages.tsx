@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
-import { Image, Sparkles } from "lucide-react";
+import { Download, Image, Sparkles } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -52,6 +52,27 @@ const GenerateImages = () => {
     }
     setLoading(false);
   };
+
+  const handleDownload = async () => {
+  try {
+    const response = await fetch(content);
+    const blob = await response.blob();
+
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = blobUrl;
+    link.download = `ai-image-${Date.now()}.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    toast.error("Failed to download image");
+  }
+};
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}
@@ -137,8 +158,15 @@ const GenerateImages = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full">
+          <div className="mt-3 h-full gap-3">
             <img src={content} alt="image" className="w-full h-full" />
+            <a
+              onClick={handleDownload}
+              className="flex justify-center items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-md transition"
+            >
+              <Download className="w-4 h-4" />
+              Download Image
+            </a>
           </div>
         )}
       </div>
