@@ -1,47 +1,38 @@
-import { useAuth } from "@clerk/clerk-react";
-import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Scissors, Sparkles } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+import usePrivateAxios from "../api/privateAxios";
+import { removeObject } from "../api/contents";
 
 const RemoveObject = () => {
   const [input, setInput] = useState<File | null>(null);
   const [object, setObject] = useState("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [content, setContent] = useState<string>("");
+  const privateApi = usePrivateAxios();
+  const queryClient = useQueryClient();
 
-  const { getToken } = useAuth();
+  if (object.split(" ").length > 1) {
+    return toast("Please enter only one object name");
+  }
+  const formData = new FormData();
+  formData.append("image", input as File);
+  formData.append("object", object as string);
+
+  const { mutate, isPending, data } = useMutation({
+    mutationFn: () => removeObject({ privateApi, formData }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong");
+    },
+  });
 
   const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async (
     e,
   ) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-
-      if (object.split(" ").length > 1) {
-        return toast("Please enter only one object name");
-      }
-      const formData = new FormData();
-      formData.append("image", input as File);
-      formData.append("object", object as string);
-
-      const { data } = await axios.post("/ai/remove-image-object", formData, {
-        headers: { Authorization: `Bearer ${await getToken()}` },
-      });
-
-      if (data.success) {
-        setContent(data.content);
-        // console.log(data.content)
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-    setLoading(false);
+    mutate();
   };
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
@@ -81,10 +72,10 @@ const RemoveObject = () => {
         />
 
         <button
-          disabled={loading}
+          disabled={isPending}
           className="w-full flex justify-center items-center gap-2 bg-linear-to-r from-[#417df6] to-[#8e37eb] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer"
         >
-          {loading ? (
+          {isPending ? (
             <span className="w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin"></span>
           ) : (
             <Scissors className="w-5" />
@@ -100,7 +91,7 @@ const RemoveObject = () => {
           <h1 className="text-xl font-semibold">Processed image</h1>
         </div>
 
-        {!content ? (
+        {!data ? (
           <div className="flex-1 flex justify-center items-center">
             <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
               <Scissors className="w-9 h-9" />
@@ -109,7 +100,7 @@ const RemoveObject = () => {
           </div>
         ) : (
           <div className="mt-3 h-full">
-            <img src={content} alt="image" className="w-full h-full" />
+            <img src={data} alt="image" className="w-full h-full" />
           </div>
         )}
       </div>

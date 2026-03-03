@@ -1,8 +1,10 @@
-import { useAuth, useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import usePrivateAxios from "../api/privateAxios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchPublishedData, toggleLike } from "../api/user";
+import { useUser } from "@clerk/clerk-react";
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -19,109 +21,70 @@ interface PublishData {
 }
 
 const Community = () => {
-  const [creations, setCreations] = useState<PublishData[]>([]);
   const { user } = useUser();
-  const [loading, setLoading] = useState<boolean>(true);
   // console.log(typeof user?.id)
+  const privateApi = usePrivateAxios();
+  const queryClient = useQueryClient();
 
-  const { getToken } = useAuth();
+  // fetch publish data
+  const { data, isPending } = useQuery({
+    queryKey: ["publish"],
+    queryFn: () => fetchPublishedData(privateApi),
+    // staleTime: Infinity,
+  });
 
-  const fetchCreations = async () => {
-    try {
-      const { data } = await axios.get("/user/get-publish-creations", {
-        headers: { Authorization: `Bearer ${await getToken()}` },
-      });
+  // handle like toggle
+  const { mutate: toggleLikeMutate } = useMutation({
+    mutationFn: (id: string) => toggleLike({ privateApi, id }),
 
-      if (data.success) {
-        setCreations(data.creations);
-        // console.log(data.creations)
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-    setLoading(false);
-  };
+    // 🔥 1️⃣ Optimistic update
+    onMutate: async (id: string) => {
+      if (!user) return;
 
-  const imageLikeToggle = async (id: string) => {
-    // try {
-    //   const { data } = await axios.post("/user/toggle-like-creation", {id},{
-    //     headers: { Authorization: `Bearer ${await getToken()}` },
-    //   });
+      await queryClient.cancelQueries({ queryKey: ["publish"] });
 
-    //   if (data.success) {
-    //     toast.success(data.message);
-    //     await fetchCreations();
-    //   } else {
-    //     toast.error(data.message);
-    //   }
-    // } catch (error: any) {
-    //   toast.error(error.message);
-    // }
-    if (!user) return;
+      const previousData = queryClient.getQueryData<PublishData[]>(["publish"]);
 
-    const userId = user.id;
+      queryClient.setQueryData<PublishData[]>(["publish"], (old = []) =>
+        old.map((creation) => {
+          if (creation._id !== id) return creation;
 
-    // 1️⃣ Optimistic update (instant UI change)
-    setCreations((prev) =>
-      prev.map((creation) =>
-        creation._id === id
-          ? {
-              ...creation,
-              likes: creation.likes.includes(userId)
-                ? creation.likes.filter((uid) => uid !== userId)
-                : [...creation.likes, userId],
-            }
-          : creation,
-      ),
-    );
+          const isLiked = creation.likes.includes(user.id);
 
-    try {
-      // 2️⃣ Call backend (no refetch)
-      const { data } = await axios.post(
-        "/user/toggle-like-creation",
-        { id },
-        {
-          headers: { Authorization: `Bearer ${await getToken()}` },
-        },
+          return {
+            ...creation,
+            likes: isLiked
+              ? creation.likes.filter((uid) => uid !== user.id)
+              : [...creation.likes, user.id],
+          };
+        }),
       );
 
-      if (data.success) {
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
+      return { previousData };
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+    },
+
+    // ❌ 2️⃣ Rollback if failed
+    onError: (err, id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(["publish"], context.previousData);
       }
-    } catch (error: any) {
       toast.error("Something went wrong");
+    },
 
-      // 3️⃣ Revert if failed
-      setCreations((prev) =>
-        prev.map((creation) =>
-          creation._id === id
-            ? {
-                ...creation,
-                likes: creation.likes.includes(userId)
-                  ? creation.likes.filter((uid) => uid !== userId)
-                  : [...creation.likes, userId],
-              }
-            : creation,
-        ),
-      );
-    }
-  };
+    // 🔄 3️⃣ Sync with server (optional but safe)
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["publish"] });
+    },
+  });
 
-  useEffect(() => {
-    if (user) {
-      fetchCreations();
-    }
-  }, [user]);
-
-  return !loading ? (
+  return !isPending ? (
     <div className="flex-1 h-full flex flex-col gap-4 p-6">
       <h1>Creations</h1>
       <div className="bg-white h-full w-full rounded-xl overflow-y-scroll">
-        {creations.map((creation) => (
+        {data.map((creation: PublishData) => (
           <div
             key={creation._id}
             className="relative group inline-block pl-3 pt-3 w-full sm:max-w-1/2 lg:max-w-1/3"
@@ -139,7 +102,7 @@ const Community = () => {
               <div className="flex gap-1 items-center">
                 <p>{creation.likes.length}</p>
                 <Heart
-                  onClick={() => imageLikeToggle(creation._id)}
+                  onClick={() => toggleLikeMutate(creation._id)}
                   className={`min-w-5 h-5 hover:scale-110 cursor-pointer ${creation.likes.includes(user?.id || "") ? "fill-red-500 text-red-600" : "text-white"}`}
                 />
               </div>

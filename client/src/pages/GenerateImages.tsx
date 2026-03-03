@@ -1,10 +1,9 @@
-import { useAuth } from "@clerk/clerk-react";
-import axios from "axios";
 import { Download, Image, Sparkles } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+import usePrivateAxios from "../api/privateAxios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { generateImage } from "../api/contents";
 
 const ImageStyle: string[] = [
   "Realistic",
@@ -20,59 +19,48 @@ const GenerateImages = () => {
   const [selectedStyle, setSelectedStyle] = useState<string>("Realistic");
   const [input, setInput] = useState<string>("");
   const [publish, setPublish] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [content, setContent] = useState<string>("");
 
-  const { getToken } = useAuth();
+  const privateApi = usePrivateAxios();
+  const queryClient = useQueryClient();
+  const prompt = `Generate an image of ${input} in the style ${selectedStyle}`;
+
+  const { mutate, isPending, data } = useMutation({
+    mutationFn: () => generateImage({ privateApi, prompt, publish }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong");
+    },
+  });
 
   const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async (
     e,
   ) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const prompt = `Generate an image of ${input} in the style ${selectedStyle}`;
-
-      const { data } = await axios.post(
-        "/ai/generate-image",
-        { prompt, publish },
-        {
-          headers: { Authorization: `Bearer ${await getToken()}` },
-        },
-      );
-
-      if (data.success) {
-        setContent(data.content);
-        // console.log(data.content)
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-    setLoading(false);
+    mutate();
   };
 
   const handleDownload = async () => {
-  try {
-    const response = await fetch(content);
-    const blob = await response.blob();
+    try {
+      const response = await fetch(data);
+      const blob = await response.blob();
 
-    const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-    link.href = blobUrl;
-    link.download = `ai-image-${Date.now()}.png`;
+      link.href = blobUrl;
+      link.download = `ai-image-${Date.now()}.png`;
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    window.URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    toast.error("Failed to download image");
-  }
-};
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      toast.error("Failed to download image");
+    }
+  };
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}
@@ -131,10 +119,10 @@ const GenerateImages = () => {
 
         <br />
         <button
-          disabled={loading}
+          disabled={isPending}
           className="w-full flex justify-center items-center gap-2 bg-linear-to-r from-[#00ad25] to-[#04ff50] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer"
         >
-          {loading ? (
+          {isPending ? (
             <span className="w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin"></span>
           ) : (
             <Image className="w-5" />
@@ -150,7 +138,7 @@ const GenerateImages = () => {
           <h1 className="text-xl font-semibold">Generated image</h1>
         </div>
 
-        {!content ? (
+        {!data ? (
           <div className="flex-1 flex justify-center items-center">
             <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
               <Image className="w-9 h-9" />
@@ -159,7 +147,7 @@ const GenerateImages = () => {
           </div>
         ) : (
           <div className="mt-3 h-full gap-3">
-            <img src={content} alt="image" className="w-full h-full" />
+            <img src={data} alt="image" className="w-full h-full" />
             <a
               onClick={handleDownload}
               className="flex justify-center items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-md transition"

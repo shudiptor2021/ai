@@ -1,11 +1,10 @@
 import { Edit, Sparkles } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
-import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 import Markdown from "react-markdown";
-
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+import usePrivateAxios from "../api/privateAxios";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { generateArticle } from "../api/contents";
 
 interface ArticleLenght {
   length: number;
@@ -22,38 +21,27 @@ const WriteArticle = () => {
   const [selectedLength, setSelectedLength] = useState<ArticleLenght>(
     articleLength[0],
   );
-  const [input, setInput] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [content, setContent] = useState<string>("");
 
-  const { getToken } = useAuth();
+  const [input, setInput] = useState<string>("");
+  const privateApi = usePrivateAxios();
+  const queryClient = useQueryClient();
+  const prompt = `Write an article about ${input} in ${selectedLength.text}`;
+
+  const { mutate, isPending, data } = useMutation({
+    mutationFn: () => generateArticle({ privateApi, prompt, selectedLength }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong");
+    },
+  });
 
   const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async (
     e,
   ) => {
     e.preventDefault();
-    try {
-      setLoading(true);
-      const prompt = `Write an article about ${input} in ${selectedLength.text}`;
-
-      const { data } = await axios.post(
-        "/ai/generate-article",
-        { prompt, length: selectedLength.length },
-        {
-          headers: { Authorization: `Bearer ${await getToken()}` },
-        },
-      );
-
-      if (data.success) {
-        setContent(data.content);
-        // console.log(content)
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-    setLoading(false);
+    mutate();
   };
 
   return (
@@ -97,10 +85,10 @@ const WriteArticle = () => {
         </div>
         <br />
         <button
-          disabled={loading}
+          disabled={isPending}
           className="w-full flex justify-center items-center gap-2 bg-linear-to-r from-[#226bff] to-[#65adff] text-white px-4 py-2 mt-6 text-sm rounded-lg cursor-pointer"
         >
-          {loading ? (
+          {isPending ? (
             <span className="w-4 h-4 my-1 rounded-full border-2 border-t-transparent animate-spin"></span>
           ) : (
             <Edit className="w-5" />
@@ -116,7 +104,7 @@ const WriteArticle = () => {
           <h1 className="text-xl font-semibold">Generated article</h1>
         </div>
 
-        {!content ? (
+        {!data ? (
           <div className="flex-1 flex justify-center items-center">
             <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
               <Edit className="w-9 h-9" />
@@ -124,8 +112,10 @@ const WriteArticle = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full overflow-y-scroll text-sm text-slate-600">
-            <div className="reset-tw"><Markdown>{content}</Markdown></div>
+          <div className="mt-3 h-full text-sm text-slate-600">
+            <div className="reset-tw">
+              <Markdown>{data}</Markdown>
+            </div>
           </div>
         )}
       </div>

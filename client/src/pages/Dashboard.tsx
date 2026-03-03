@@ -1,11 +1,11 @@
-import { Protect, useAuth } from "@clerk/clerk-react";
+import { Protect } from "@clerk/clerk-react";
 import { Gem, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
 import CreationItems from "../components/CreationItems";
-import axios from "axios";
-import toast from "react-hot-toast";
+import usePrivateAxios from "../api/privateAxios";
+import { fetchAllContent } from "../api/contents";
+import { useQuery } from "@tanstack/react-query";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
+// axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 interface CreationData {
   _id: number;
@@ -20,31 +20,13 @@ interface CreationData {
 }
 
 const Dashboard = () => {
-  const [creations, setCreations] = useState<CreationData[]>([]);
-  const [loading, setLoading] = useState<Boolean>(true);
-  const { getToken } = useAuth();
+  const privateApi = usePrivateAxios();
 
-  const getDashboardData = async () => {
-    try {
-      const { data } = await axios.get("/user/get-user-creations", {
-        headers: { Authorization: `Bearer ${await getToken()}` },
-      });
-
-      if (data.success) {
-        setCreations(data.creations);
-        // console.log(data.creations)
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    getDashboardData();
-  }, []);
+  const { data, isPending } = useQuery({
+    queryKey: ["contents"],
+    queryFn: () => fetchAllContent(privateApi),
+    staleTime: Infinity,
+  });
 
   return (
     <div className="h-full overflow-y-scroll p-6">
@@ -53,7 +35,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-center w-72 p-4 px-6 bg-white rounded-xl border border-gray-200">
           <div className="text-slate-600">
             <p className="text-sm">Total Creations</p>
-            <h2 className="text-xl font-semibold">{creations.length}</h2>
+            <h2 className="text-xl font-semibold">{data?.length}</h2>
           </div>
           <div className="w-10 h-10 rounded-lg bg-linear-to-br from-[#3588f2] to-[#0bb0d7] text-white flex justify-center items-center">
             <Sparkles className="w-5 text-white" />
@@ -76,14 +58,14 @@ const Dashboard = () => {
         </div>
       </div>
       {/* recent creations */}
-      {loading ? (
+      {isPending ? (
         <div className="flex justify-center items-center h-full">
           <span className="w-10 h-10 rounded-full border-3 border-blue-500 border-t-transparent animate-spin"></span>
         </div>
       ) : (
         <div className="space-y-3">
           <p className="mt-6 mb-4">Recent Creations</p>
-          {creations.map((item) => (
+          {data.map((item: CreationData) => (
             <CreationItems key={item._id} item={item} />
           ))}
         </div>
