@@ -146,7 +146,7 @@ const GenerateImages = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full gap-3">
+          <div className="mt-3 flex flex-col h-full gap-3">
             <img src={data} alt="image" className="w-full h-full" />
             <a
               onClick={handleDownload}

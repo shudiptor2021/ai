@@ -41,7 +41,7 @@ const Sidebar = ({ sidebar, setSidebar }: SidebarProps) => {
   const { signOut, openUserProfile } = useClerk();
   return (
     <div
-      className={`w-60 bg-white border-r border-gray-200 flex flex-col justify-between items-center max-sm:absolute top-14 bottom-0 ${
+      className={`w-60 bg-white border-r border-gray-200 flex flex-col justify-between items-center max-sm:absolute top-14 bottom-0 z-50 ${
         sidebar ? "translate-x-0" : "max-sm:-translate-x-full"
       } transition-all duration-300 ease-in-out`}
     >
@@ -75,20 +75,29 @@ const Sidebar = ({ sidebar, setSidebar }: SidebarProps) => {
       </div>
       {/* signout section */}
       <div className="w-full border-t border-gray-200 p-4 px-7 flex items-center justify-between">
-        <div onClick={openUserProfile} className="flex gap-2 items-center cursor-pointer">
-          <img src={user?.imageUrl} alt="profile image" className="w-8 rounded-full"/>
+        <div
+          onClick={() => openUserProfile({})}
+          className="flex gap-2 items-center cursor-pointer"
+        >
+          <img
+            src={user?.imageUrl}
+            alt="profile image"
+            className="w-8 rounded-full"
+          />
           <div>
             <h1 className="text-sm font-medium">{user?.fullName}</h1>
             <p className="text-xs text-gray-500">
-              <Protect plan="premium" fallback='Free'>
+              <Protect plan="premium" fallback="Free">
                 Premium
               </Protect>
               Plan
             </p>
           </div>
         </div>
-        <LogOut onClick={signOut} className="w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer"/>
-
+        <LogOut
+          onClick={() => signOut()}
+          className="w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer"
+        />
       </div>
     </div>
   );

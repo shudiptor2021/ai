@@ -1,12 +1,10 @@
 import { Heart } from "lucide-react";
-import axios from "axios";
 import toast from "react-hot-toast";
 import usePrivateAxios from "../api/privateAxios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchPublishedData, toggleLike } from "../api/user";
 import { useUser } from "@clerk/clerk-react";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 interface PublishData {
   _id: string;
@@ -81,7 +79,7 @@ const Community = () => {
   });
 
   return !isPending ? (
-    <div className="flex-1 h-full flex flex-col gap-4 p-6">
+    <div className="flex-1 h-full flex flex-col gap-4 p-6 relative z-0">
       <h1>Creations</h1>
       <div className="bg-white h-full w-full rounded-xl overflow-y-scroll">
         {data.map((creation: PublishData) => (
