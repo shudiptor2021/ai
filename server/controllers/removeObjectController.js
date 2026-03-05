@@ -1,14 +1,30 @@
 import Content from "../models/aiContent.model.js";
 import { v2 as cloudinary } from "cloudinary";
-
+import { removeObjectJoiSchema } from "../validators.js/aiContentValidator.js";
 
 export const removeImageObject = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { object } = req.body;
+    // const { object } = req.body;
     const image = req.file;
     const plan = req.plan;
 
+    // Validate request first
+    const { error, value } = removeObjectJoiSchema.validate({
+      object: req.body.object,
+      file: req.file,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const { object } = value;
+
+    // check usege limit
     if (plan !== "premium") {
       return res.json({
         success: false,
@@ -46,7 +62,7 @@ export const removeImageObject = async (req, res) => {
       type: "image",
     };
 
-    // database
+    // save to database
     await Content.create(data);
 
     res.json({ success: true, content: imageUrl });

@@ -23,11 +23,11 @@ export const generateArticle = async (req, res) => {
 
     const { prompt, length } = value;
 
-// check usege limit
+    // check usege limit
     if (plan !== "premium" && free_usage >= 10) {
       return res.json({
         success: false,
-        message: "Limit reached. Upgrade to continue.",
+        message: "Free limit reached. Upgrade to premium.",
       });
     }
 

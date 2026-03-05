@@ -1,6 +1,6 @@
 import Content from "../models/aiContent.model.js";
 import { v2 as cloudinary } from "cloudinary";
-
+import { removeBgJoiSchema } from "../validators.js/aiContentValidator.js";
 
 export const removeImageBackground = async (req, res) => {
   try {
@@ -8,6 +8,19 @@ export const removeImageBackground = async (req, res) => {
     const image = req.file;
     const plan = req.plan;
 
+    // Validate request first
+    const { error } = removeBgJoiSchema.validate({
+      file: req.file,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // check usege limit
     if (plan !== "premium") {
       return res.json({
         success: false,
@@ -22,6 +35,7 @@ export const removeImageBackground = async (req, res) => {
       });
     }
 
+    // remove image background
     const { secure_url } = await cloudinary.uploader.upload(image.path, {
       transformation: [
         {
@@ -39,7 +53,7 @@ export const removeImageBackground = async (req, res) => {
       type: "image",
     };
 
-    // database
+    // save to database
     await Content.create(data);
 
     res.json({ success: true, content: secure_url });

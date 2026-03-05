@@ -9,15 +9,15 @@ import GenerateImages from "./pages/GenerateImages";
 import RemoveBackground from "./pages/RemoveBackground";
 import RemoveObject from "./pages/RemoveObject";
 import ReviewResume from "./pages/ReviewResume";
-// import { useAuth } from "@clerk/clerk-react";
-// import { useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import { useEffect } from "react";
 import {Toaster} from "react-hot-toast";
 
 function App() {
-  // const {getToken} = useAuth();
-  // useEffect(()=>{
-  //   getToken().then((token)=> console.log(token));
-  // },[])
+  const {getToken} = useAuth();
+  useEffect(()=>{
+    getToken().then((token)=> console.log(token));
+  },[])
   return (
     <div className="">
       <Toaster/>

@@ -1,13 +1,27 @@
 import Content from "../models/aiContent.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import axios from "axios";
+import { imageJoiSchema } from "../validators.js/aiContentValidator.js";
 
 export const generateImage = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { prompt, publish } = req.body;
+    // const { prompt, publish } = req.body;
     const plan = req.plan;
 
+    // Validate request first
+    const { error, value } = imageJoiSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    const { prompt, publish } = value;
+
+    // check usege limit
     if (plan !== "premium") {
       return res.json({
         success: false,
@@ -39,7 +53,7 @@ export const generateImage = async (req, res) => {
       publish,
     };
 
-    // database
+    // save to database
     await Content.create(mainData);
 
     res.json({ success: true, content: secure_url });

@@ -3,7 +3,7 @@ import fs from "fs";
 import { unlink } from "fs/promises";
 import pdf from "pdf-parse-fork";
 import AI from "../config/ai.js";
-
+import { reviewResumeJoiSchema } from "../validators.js/aiContentValidator.js";
 
 // Helper to delete a file safely
 const deleteFile = async (filePath) => {
@@ -18,9 +18,23 @@ export const reviewResume = async (req, res) => {
   const resume = req.file;
   try {
     const { userId } = req.auth();
-
     const plan = req.plan;
 
+    // Validate request first
+    const { error } = reviewResumeJoiSchema.validate({
+      file: req.file,
+    });
+
+    if (error) {
+      if (req.file) await deleteFile(req.file.path);
+
+      return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    }
+
+    // check usege limit
     if (plan !== "premium") {
       return res.status(403).json({
         success: false,
@@ -93,7 +107,7 @@ export const reviewResume = async (req, res) => {
       type: "resume-review",
     };
 
-    // database
+    // save to database
     await Content.create(data);
 
     res.status(200).json({ success: true, content: aiResponse });
