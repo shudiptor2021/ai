@@ -65,7 +65,7 @@ const Community = () => {
     },
 
     // ❌ 2️⃣ Rollback if failed
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(["publish"], context.previousData);
       }
