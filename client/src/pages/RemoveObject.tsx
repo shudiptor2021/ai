@@ -11,9 +11,10 @@ const RemoveObject = () => {
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-  if (object.split(" ").length > 1) {
-    return toast("Please enter only one object name");
-  }
+  // if (object.split(" ").length > 1) {
+  //  toast("Please enter only one object name");
+  //  return;
+  // }
   const formData = new FormData();
   formData.append("image", input as File);
   formData.append("object", object as string);
@@ -32,6 +33,19 @@ const RemoveObject = () => {
     e,
   ) => {
     e.preventDefault();
+    const value = object;
+
+    // space at start or end
+    if (value !== value.trim()) {
+      toast.error("Space is not allowed at the beginning or end");
+      return;
+    }
+
+    // more than one word
+    if (value.split(" ").length > 1) {
+      toast.error("Please enter only one object name");
+      return;
+    }
     mutate();
   };
   return (

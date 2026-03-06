@@ -6,6 +6,8 @@ import { clerkMiddleware, requireAuth } from '@clerk/express';
 import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary from './config/cloudinary.js';
 import userRouter from './routes/userRoute.js';
+import webhookRouter from './routes/webhookRoutes.js';
+import clerkWebhooks from './controllers/clerkWebhook.js';
 
 
 const app = express();
@@ -13,13 +15,15 @@ const app = express();
 await connectDB();
 await connectCloudinary();
 
+// app.post(
+//   "/api/clerk",
+//   express.raw({ type: "application/json" }),
+//   clerkWebhooks
+// );
+app.use('/api/webhook', webhookRouter)
 app.use(cors());
 app.use(express.json());
 app.use(clerkMiddleware());
-
-app.get('/', (req, res)=> {
-    res.send('server is live')
-});
 
 app.use(requireAuth());
 

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { assets } from "../assets/dummy-assets";
+import logo from "../../public/genailogo.png"
 import { ArrowRight } from "lucide-react";
 import { useClerk, UserButton, useUser } from "@clerk/clerk-react";
 
@@ -11,7 +11,7 @@ const Navbar = () => {
   return (
     <div className="fixed z-5 w-full backdrop-blur-2xl flex justify-between items-center py-3 px-4 sm:px-20 xl:px-32 ">
       <img
-        src={assets.logo}
+        src={logo}
         alt="logo"
         className="w-32 sm:w-44 cursor-pointer"
         onClick={() => navigate("/")}
