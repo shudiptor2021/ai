@@ -11,10 +11,6 @@ const RemoveObject = () => {
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-  // if (object.split(" ").length > 1) {
-  //  toast("Please enter only one object name");
-  //  return;
-  // }
   const formData = new FormData();
   formData.append("image", input as File);
   formData.append("object", object as string);
