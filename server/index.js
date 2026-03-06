@@ -20,8 +20,11 @@ await connectCloudinary();
 //   express.raw({ type: "application/json" }),
 //   clerkWebhooks
 // );
+
+// middlewares
 app.use('/api/webhook', webhookRouter)
 app.use(cors());
+// app.use(cors({origin: "https://hotel-booking-frontend-xi-hazel.vercel.app"}));
 app.use(express.json());
 app.use(clerkMiddleware());
 
