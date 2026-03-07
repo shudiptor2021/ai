@@ -28,15 +28,15 @@ app.use(cors({origin: "https://genai-frontend-one.vercel.app"}));
 app.use(express.json());
 app.use(clerkMiddleware());
 
-app.use(requireAuth());
+// app.use(requireAuth());
 
 // Health check endpoint (add this!)
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-app.use('/api/v1/ai', aiRouter);
-app.use('/api/v1/user', userRouter);
+app.use('/api/v1/ai', requireAuth(), aiRouter);
+app.use('/api/v1/user', requireAuth(), userRouter);
 
 app.get('/', (req, res) => {
     res.send("api is working")
