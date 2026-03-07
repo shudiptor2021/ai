@@ -30,7 +30,11 @@ const GenerateImages = () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Something went wrong";
+      const message =
+    error?.response?.data?.message ??
+    error?.response?.data ??
+    error?.message ??
+    "Something went wrong";
       toast.error(message);
     },
   });

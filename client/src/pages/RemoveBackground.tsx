@@ -10,16 +10,18 @@ const RemoveBackground = () => {
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-  const formData = new FormData();
-  formData.append("image", input as File);
-
   const { mutate, isPending, data } = useMutation({
-    mutationFn: () => removeBackground({ privateApi, formData }),
+    mutationFn: (formData: FormData) =>
+      removeBackground({ privateApi, formData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Something went wrong";
+      const message =
+        error?.response?.data?.message ??
+        error?.response?.data ??
+        error?.message ??
+        "Something went wrong";
       toast.error(message);
     },
   });
@@ -28,7 +30,14 @@ const RemoveBackground = () => {
     e,
   ) => {
     e.preventDefault();
-    mutate();
+    if (!input) {
+      toast.error("Please upload a resume");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", input as File);
+    mutate(formData);
   };
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">

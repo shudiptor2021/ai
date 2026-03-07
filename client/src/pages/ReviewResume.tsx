@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { FileText, Sparkles } from "lucide-react";
@@ -8,26 +7,25 @@ import Markdown from "react-markdown";
 import usePrivateAxios from "../api/privateAxios";
 import { reviewResume } from "../api/contents";
 
-
-
 const ReviewResume = () => {
   const [input, setInput] = useState<File | null>(null);
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-    
-
-    const { mutate, isPending, data } = useMutation({
+  const { mutate, isPending, data } = useMutation({
     mutationFn: (formData: FormData) => reviewResume({ privateApi, formData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Something went wrong";
+      const message =
+    error?.response?.data?.message ??
+    error?.response?.data ??
+    error?.message ??
+    "Something went wrong";
       toast.error(message);
     },
   });
-
 
   const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async (
     e,
@@ -35,17 +33,16 @@ const ReviewResume = () => {
     e.preventDefault();
 
     if (!input) {
-    toast.error("Please upload a resume");
-    return;
-  }
+      toast.error("Please upload a resume");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("resume", input as File);
-     mutate(formData);
+    mutate(formData);
 
     // try {
     //   setLoading(true);
-
 
     //   const { data } = await axios.post("/ai/resume-review", formData, {
     //     headers: { Authorization: `Bearer ${await getToken()}` },

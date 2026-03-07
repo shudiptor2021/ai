@@ -26,7 +26,7 @@ export const removeImageObject = async (req, res) => {
 
     // check usege limit
     if (plan !== "premium") {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: "This feature is only available for premium subscritions.",
       });

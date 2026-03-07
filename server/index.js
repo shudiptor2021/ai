@@ -17,8 +17,8 @@ await connectCloudinary();
 
 // middlewares
 app.use('/api/webhook', webhookRouter)
-// app.use(cors());
-app.use(cors({origin: "https://genai-frontend-one.vercel.app"}));
+app.use(cors());
+// app.use(cors({origin: "https://genai-frontend-one.vercel.app"}));
 app.use(express.json());
 app.use(clerkMiddleware());
 

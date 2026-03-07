@@ -11,17 +11,17 @@ const RemoveObject = () => {
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-  const formData = new FormData();
-  formData.append("image", input as File);
-  formData.append("object", object as string);
-
   const { mutate, isPending, data } = useMutation({
-    mutationFn: () => removeObject({ privateApi, formData }),
+    mutationFn: (formData: FormData) => removeObject({ privateApi, formData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || "Something went wrong";
+      const message =
+        error?.response?.data?.message ??
+        error?.response?.data ??
+        error?.message ??
+        "Something went wrong";
       toast.error(message);
     },
   });
@@ -43,7 +43,11 @@ const RemoveObject = () => {
       toast.error("Please enter only one object name");
       return;
     }
-    mutate();
+
+    const formData = new FormData();
+    formData.append("image", input as File);
+    formData.append("object", object as string);
+    mutate(formData);
   };
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
