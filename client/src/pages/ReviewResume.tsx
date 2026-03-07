@@ -15,11 +15,10 @@ const ReviewResume = () => {
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
 
-    const formData = new FormData();
-    formData.append("resume", input as File);
+    
 
     const { mutate, isPending, data } = useMutation({
-    mutationFn: () => reviewResume({ privateApi, formData }),
+    mutationFn: (formData: FormData) => reviewResume({ privateApi, formData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
@@ -34,7 +33,15 @@ const ReviewResume = () => {
     e,
   ) => {
     e.preventDefault();
-     mutate();
+
+    if (!input) {
+    toast.error("Please upload a resume");
+    return;
+  }
+
+    const formData = new FormData();
+    formData.append("resume", input as File);
+     mutate(formData);
 
     // try {
     //   setLoading(true);
