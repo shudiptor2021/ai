@@ -21,7 +21,8 @@ const RemoveObject = () => {
       queryClient.invalidateQueries({ queryKey: ["contents"] });
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Something went wrong");
+      const message = error?.response?.data?.message || "Something went wrong";
+      toast.error(message);
     },
   });
 

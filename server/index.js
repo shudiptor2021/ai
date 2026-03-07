@@ -7,7 +7,6 @@ import aiRouter from './routes/aiRoutes.js';
 import connectCloudinary from './config/cloudinary.js';
 import userRouter from './routes/userRoute.js';
 import webhookRouter from './routes/webhookRoutes.js';
-import clerkWebhooks from './controllers/clerkWebhook.js';
 
 
 const app = express();
@@ -15,11 +14,6 @@ const app = express();
 await connectDB();
 await connectCloudinary();
 
-// app.post(
-//   "/api/clerk",
-//   express.raw({ type: "application/json" }),
-//   clerkWebhooks
-// );
 
 // middlewares
 app.use('/api/webhook', webhookRouter)
@@ -28,7 +22,6 @@ app.use(cors({origin: "https://genai-frontend-one.vercel.app"}));
 app.use(express.json());
 app.use(clerkMiddleware());
 
-// app.use(requireAuth());
 
 // Health check endpoint (add this!)
 app.get("/health", (req, res) => {
