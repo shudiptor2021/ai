@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import usePrivateAxios from "../api/privateAxios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateImage } from "../api/contents";
+import { useAuth } from "@clerk/clerk-react";
+import FreePlan from "../components/FreePlan";
 
 const ImageStyle: string[] = [
   "Realistic",
@@ -19,6 +21,8 @@ const GenerateImages = () => {
   const [selectedStyle, setSelectedStyle] = useState<string>("Realistic");
   const [input, setInput] = useState<string>("");
   const [publish, setPublish] = useState<boolean>(false);
+  const { has } = useAuth();
+  const isPremium = has?.({ plan: "premium" });
 
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
@@ -66,6 +70,9 @@ const GenerateImages = () => {
       toast.error("Failed to download image");
     }
   };
+
+  // if isn't premium plan
+  if (!isPremium) return <FreePlan title={"generate images"}/>
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}

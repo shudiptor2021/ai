@@ -13,9 +13,9 @@ const Layout = () => {
     <div className="flex flex-col items-start justify-start h-screen">
       <nav className="w-full px-8 min-h-14 flex items-center justify-between border-b border-gray-200">
         <img
-          src="/genailogo.png"
+          src="/genailogo-2.png"
           alt="logo"
-          className="w-32 sm:w-44 cursor-pointer"
+          className="w-32 sm:w-44 cursor-pointer py-3"
           onClick={() => navigate("/")}
         />
         {sidebar ? (

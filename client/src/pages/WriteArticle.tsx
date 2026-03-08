@@ -45,7 +45,7 @@ const WriteArticle = () => {
   };
 
   return (
-    <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
+    <div className="h-full p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}
       <form
         onSubmit={onSubmitHandler}
@@ -112,7 +112,7 @@ const WriteArticle = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-3 h-full text-sm text-slate-600">
+          <div className="mt-3 h-full overflow-y-scroll text-sm text-slate-600">
             <div className="reset-tw">
               <Markdown>{data}</Markdown>
             </div>

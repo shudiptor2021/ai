@@ -4,12 +4,16 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import usePrivateAxios from "../api/privateAxios";
 import { removeObject } from "../api/contents";
+import { useAuth } from "@clerk/clerk-react";
+import FreePlan from "../components/FreePlan";
 
 const RemoveObject = () => {
   const [input, setInput] = useState<File | null>(null);
   const [object, setObject] = useState("");
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
+  const { has } = useAuth();
+  const isPremium = has?.({ plan: "premium" });
 
   const { mutate, isPending, data } = useMutation({
     mutationFn: (formData: FormData) => removeObject({ privateApi, formData }),
@@ -49,6 +53,9 @@ const RemoveObject = () => {
     formData.append("object", object as string);
     mutate(formData);
   };
+
+  // if isn't premium plan
+  if (!isPremium) return <FreePlan title={"remove object"} />;
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}

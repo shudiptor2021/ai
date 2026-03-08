@@ -6,11 +6,15 @@ import toast from "react-hot-toast";
 import Markdown from "react-markdown";
 import usePrivateAxios from "../api/privateAxios";
 import { reviewResume } from "../api/contents";
+import { useAuth } from "@clerk/clerk-react";
+import FreePlan from "../components/FreePlan";
 
 const ReviewResume = () => {
   const [input, setInput] = useState<File | null>(null);
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
+  const { has } = useAuth();
+  const isPremium = has?.({ plan: "premium" });
 
   const { mutate, isPending, data } = useMutation({
     mutationFn: (formData: FormData) => reviewResume({ privateApi, formData }),
@@ -19,10 +23,10 @@ const ReviewResume = () => {
     },
     onError: (error: any) => {
       const message =
-    error?.response?.data?.message ??
-    error?.response?.data ??
-    error?.message ??
-    "Something went wrong";
+        error?.response?.data?.message ??
+        error?.response?.data ??
+        error?.message ??
+        "Something went wrong";
       toast.error(message);
     },
   });
@@ -40,25 +44,10 @@ const ReviewResume = () => {
     const formData = new FormData();
     formData.append("resume", input as File);
     mutate(formData);
-
-    // try {
-    //   setLoading(true);
-
-    //   const { data } = await axios.post("/ai/resume-review", formData, {
-    //     headers: { Authorization: `Bearer ${await getToken()}` },
-    //   });
-
-    //   if (data.success) {
-    //     setContent(data.content);
-    //     // console.log(data.content);
-    //   } else {
-    //     toast.error(data.message);
-    //   }
-    // } catch (error: any) {
-    //   toast.error(error.message);
-    // }
-    // setLoading(false);
   };
+
+  // if isn't premium plan
+  if (!isPremium) return <FreePlan title={"review resume"} />;
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}

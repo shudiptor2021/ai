@@ -4,11 +4,15 @@ import toast from "react-hot-toast";
 import usePrivateAxios from "../api/privateAxios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { removeBackground } from "../api/contents";
+import { useAuth } from "@clerk/clerk-react";
+import FreePlan from "../components/FreePlan";
 
 const RemoveBackground = () => {
   const [input, setInput] = useState<File | null>(null);
   const privateApi = usePrivateAxios();
   const queryClient = useQueryClient();
+  const { has } = useAuth();
+  const isPremium = has?.({ plan: "premium" });
 
   const { mutate, isPending, data } = useMutation({
     mutationFn: (formData: FormData) =>
@@ -39,6 +43,9 @@ const RemoveBackground = () => {
     formData.append("image", input as File);
     mutate(formData);
   };
+
+  // if isn't premium plan
+  if (!isPremium) return <FreePlan title={"remove background"}/>
   return (
     <div className="h-full overflow-y-scroll p-6 flex items-start flex-wrap gap-4 text-slate-700 ">
       {/* left col */}
